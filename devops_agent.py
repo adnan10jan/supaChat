@@ -20,7 +20,7 @@ def summarize_logs():
     
     print("Summarizing logs with Google Gemini...")
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
         payload = {
             "contents": [{
                 "parts": [{"text": "You are a DevOps assistant. Summarize the following Docker Compose logs, point out any errors, and explain possible root causes:\n\n" + logs[:4000]}]
