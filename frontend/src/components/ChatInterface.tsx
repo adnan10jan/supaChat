@@ -20,7 +20,7 @@ export default function ChatInterface() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const API_BASE = '';
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -100,8 +100,8 @@ export default function ChatInterface() {
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-2xl p-4 ${msg.role === 'user'
-                                ? 'bg-blue-600 text-white rounded-br-sm'
-                                : 'bg-gray-900 border border-gray-800 rounded-bl-sm'
+                            ? 'bg-blue-600 text-white rounded-br-sm'
+                            : 'bg-gray-900 border border-gray-800 rounded-bl-sm'
                             }`}>
                             <p className="text-sm md:text-base leading-relaxed">{msg.content}</p>
 
