@@ -13,34 +13,25 @@ def summarize_logs():
     result = subprocess.run(["docker-compose", "logs", "--tail=100"], capture_output=True, text=True)
     logs = result.stdout
     
-    gemini_key = os.environ.get("GEMINI_API_KEY", "AIzaSyDUC4l1tJZnhxHx-pS7xHgFmhOJi1jELYQ")
+    gemini_key = os.environ.get("GEMINI_API_KEY", "")
     if not gemini_key:
         print("GEMINI_API_KEY is not set. Cannot summarize logs with AI.")
         return
-    genai.configure(api_key=gemini_key)
     
-    print("Summarizing logs with OpenAI...")
+    print("Summarizing logs with Google Gemini...")
     try:
-        OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-        if not OPENAI_API_KEY:
-            print("OPENAI_API_KEY is not set!")
-            return
-            
-        url = "https://api.openai.com/v1/chat/completions"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
         payload = {
-            "model": "gpt-4o",
-            "messages": [
-                {"role": "system", "content": "You are a DevOps assistant. Summarize the following Docker Compose logs, point out any errors, and explain possible root causes."},
-                {"role": "user", "content": logs[:4000]}
-            ]
+            "contents": [{
+                "parts": [{"text": "You are a DevOps assistant. Summarize the following Docker Compose logs, point out any errors, and explain possible root causes:\n\n" + logs[:4000]}]
+            }]
         }
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {OPENAI_API_KEY}'
+            'Content-Type': 'application/json'
         })
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode())
-            content = res_data['choices'][0]['message']['content']
+            content = res_data['candidates'][0]['content']['parts'][0]['text']
         
         print("--- AI Summary ---")
         print(content)

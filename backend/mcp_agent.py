@@ -6,7 +6,7 @@ from supabase import create_client, Client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://xyzcompany.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnVvanJobXhpd3dnYmJmb3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDM2OTQsImV4cCI6MjA5MTIxOTY5NH0.qBLzhEbBkLAn-0rEfcyNkMUiXlF9Xk_Jwnfb5z4NAGw")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -57,35 +57,35 @@ Your task is to understand the user's intent. Based on their query, return a JSO
 3. "suggested_sql": "The raw SQL query that would answer this. (For informational purposes)"
 """
 
-    if not OPENAI_API_KEY:
+    if not GEMINI_API_KEY:
         return {
-            "text": f"Warning: OpenAI API key is missing. Cannot translate query: '{user_message}'",
-            "table": [{"error": "Missing OpenAI configuration"}],
+            "text": f"Warning: Google Gemini API key is missing. Cannot translate query: '{user_message}'",
+            "table": [{"error": "Missing Gemini configuration"}],
             "graph": [],
             "suggested_sql": None
         }
 
     try:
-        url = "https://api.openai.com/v1/chat/completions"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         payload = {
-            "model": "gpt-4o",
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ],
-            "response_format": {"type": "json_object"}
+            "contents": [{
+                "parts": [{"text": user_message}]
+            }],
+            "systemInstruction": {
+                "parts": [{"text": system_prompt}]
+            },
+            "generationConfig": {
+                "response_mime_type": "application/json"
+            }
         }
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {OPENAI_API_KEY}'
+            'Content-Type': 'application/json'
         })
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode())
-            content = res_data['choices'][0]['message']['content']
+            content = res_data['candidates'][0]['content']['parts'][0]['text']
         
-        if content.startswith('```json'):
-            content = content.replace('```json', '').replace('```', '').strip()
-        
+        # Parse the JSON response
         content = json.loads(content)
         query_type = content.get("query_type", "general")
         
