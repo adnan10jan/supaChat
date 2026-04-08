@@ -1,0 +1,35 @@
+name: Deploy SupaChat to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/supabase-chat || git clone ${{ github.server_url }}/${{ github.repository }} ~/supabase-chat
+            cd ~/supabase-chat
+            git pull origin main
+            
+            # Export secrets
+            export GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            export SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            export SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+            
+            # Rebuild and restart docker-compose with minimal downtime
+            docker-compose up -d --build
+          EOF
