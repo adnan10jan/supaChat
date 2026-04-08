@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   frontend:
+    restart: unless-stopped
     build:
       context: ./frontend
     ports:
@@ -20,6 +21,7 @@ services:
       retries: 3
 
   backend:
+    restart: unless-stopped
     build:
       context: ./backend
     ports:
@@ -41,6 +43,7 @@ services:
       retries: 3
 
   nginx:
+    restart: unless-stopped
     image: nginx:alpine
     ports:
       - "80:80"
@@ -51,6 +54,7 @@ services:
       - backend
 
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus
     volumes:
       - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -58,6 +62,7 @@ services:
       - "9090:9090"
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana
     ports:
       - "3001:3000"
@@ -68,6 +73,7 @@ services:
       - loki
 
   loki:
+    restart: unless-stopped
     image: grafana/loki
     ports:
       - "3100:3100"
@@ -76,6 +82,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   promtail:
+    restart: unless-stopped
     image: grafana/promtail
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
