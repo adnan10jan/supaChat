@@ -52,9 +52,9 @@ async def process_chat_query(user_message: str):
     system_prompt = f"""You are an AI assistant that translates natural language questions into data for a blog analytics platform.
 {SCHEMA_CONTEXT}
 Your task is to understand the user's intent. Based on their query, return a JSON object with:
-1. "query_type": "trending_topics" | "article_engagement" | "daily_views_trend" | "general"
-2. "text_response": "A short, friendly conversational response summarizing what you are doing or showing"
-3. "suggested_sql": "The raw SQL query that would answer this. (For informational purposes)"
+1. "query_type": "trending_topics" | "article_engagement" | "daily_views_trend" | "general" | "off_topic"
+2. "text_response": "A short, friendly conversational response answering the user."
+3. "suggested_sql": "The raw SQL query that would answer this. (Null if the query is off_topic)"
 """
 
     if not GEMINI_API_KEY:
@@ -124,9 +124,17 @@ Your task is to understand the user's intent. Based on their query, return a JSO
                         dates[d] = dates.get(d, 0) + row["views"]
                 data = [{"date": k, "views": v} for k, v in dates.items()]
                 data.sort(key=lambda x: x["date"])
+                
+            elif query_type == "off_topic":
+                data = []
+                
             else:
-                 res = supabase.table("articles").select("*").limit(5).execute()
-                 data = res.data
+                 # Provide generic article data as a default if it's a general on-topic inquiry
+                 if not content.get("suggested_sql"):
+                     data = []
+                 else:
+                     res = supabase.table("articles").select("*").limit(5).execute()
+                     data = res.data
         else:
             data = [{"error": "Supabase client not initialized"}]
 
