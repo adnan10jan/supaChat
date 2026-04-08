@@ -13,23 +13,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.7.0
+      - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          password: ${{ secrets.AZURE_VM_PASSWORD }}
+          script: |
             cd ~/supabase-chat || git clone ${{ github.server_url }}/${{ github.repository }} ~/supabase-chat
             cd ~/supabase-chat
             git pull origin main
             
             # Export secrets
-            export GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             export SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             export SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
             
             # Rebuild and restart docker-compose with minimal downtime
             docker-compose up -d --build
-          EOF
