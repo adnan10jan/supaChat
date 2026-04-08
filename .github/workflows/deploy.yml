@@ -24,11 +24,13 @@ jobs:
             cd ~/supabase-chat
             git pull origin main
             
-            if ! command -v docker &> /dev/null
+            if ! command -v docker-compose &> /dev/null
             then
                 echo "Installing Docker..."
                 sudo apt-get update
-                sudo apt-get install -y docker.io docker-compose-v2
+                sudo apt-get install -y docker.io
+                sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                sudo chmod +x /usr/local/bin/docker-compose
             fi
             
             # Export secrets
@@ -37,4 +39,4 @@ jobs:
             export SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
             
             # Rebuild and restart with modern docker compose plugin
-            sudo -E docker compose up -d --build
+            sudo -E docker-compose up -d --build
