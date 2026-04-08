@@ -24,10 +24,17 @@ jobs:
             cd ~/supabase-chat
             git pull origin main
             
+            if ! command -v docker-compose &> /dev/null
+            then
+                echo "Installing Docker..."
+                sudo apt-get update
+                sudo apt-get install -y docker.io docker-compose
+            fi
+            
             # Export secrets
             export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             export SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             export SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
             
             # Rebuild and restart docker-compose with minimal downtime
-            docker-compose up -d --build
+            sudo -E docker-compose up -d --build
